@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 20 - System Console</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #0c1017;
+            color: #d1d5db;
+            font-family: 'Consolas', 'Courier New', monospace;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .terminal-window {
+            width: 100%;
+            max-width: 800px;
+            background: #161b22;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+        }
+        .terminal-header {
+            background: #21262d;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #30363d;
+        }
+        .buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .btn-close { background: #ff5f56; }
+        .btn-min { background: #ffbd2e; }
+        .btn-max { background: #27c93f; }
+        .terminal-title {
+            margin-left: 15px;
+            font-size: 13px;
+            color: #8b949e;
+        }
+        .terminal-body {
+            padding: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 380px;
+            max-height: 520px;
+            overflow-y: auto;
+        }
+        .output-line {
+            margin-bottom: 6px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .system { color: #58a6ff; }
+        .success { color: #3fb950; }
+        .highlight { color: #d2a8ff; }
+        .warning { color: #f0883e; }
+        .dim { color: #8b949e; }
+        
+        .input-row {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .prompt-symbol {
+            color: #3fb950;
+            margin-right: 8px;
+            user-select: none;
+        }
+        #cmd-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #f0f6fc;
+            font-family: inherit;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="terminal-window">
+    <div class="terminal-header">
+        <div class="buttons">
+            <span class="btn btn-close"></span>
+            <span class="btn btn-min"></span>
+            <span class="btn btn-max"></span>
+        </div>
+        <span class="terminal-title">guest@chapter20:~ (bash)</span>
+    </div>
+    <div class="terminal-body" id="console">
+        <div id="logs"></div>
+        <div class="input-row" id="inputContainer" style="display: none;">
+            <span class="prompt-symbol">guest@chapter20:~$</span>
+            <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus>
+        </div>
+    </div>
+</div>
+
+<script>
+    const logsContainer = document.getElementById('logs');
+    const inputContainer = document.getElementById('inputContainer');
+    const cmdInput = document.getElementById('cmd-input');
+    const consoleBody = document.getElementById('console');
+
+    // Kịch bản khởi động ban đầu
+    const bootLogs = [
+        { text: '> Initializing kernel modules...', class: 'dim', delay: 350 },
+        { text: '> Checking system dependencies: [Freedom, Resilience, Balance]... OK', class: 'system', delay: 450 },
+        { text: '> Deploying release: v20.0 (Chapter 20)...', class: 'system', delay: 500 },
+        { text: '> Status: 200 OK.', class: 'success', delay: 400 },
+        { text: '--------------------------------------------------', class: 'dim', delay: 200 },
+        { text: '"Hello World\\n"', class: 'highlight', delay: 400 },
+        { text: 'Hệ thống đã nâng cấp thành công lên phiên bản 20.0.', class: 'dim', delay: 300 },
+        { text: 'Gõ "help" để xem danh sách các lệnh có thể tương tác.', class: 'warning', delay: 300 }
+    ];
+
+    // Danh sách các lệnh hỗ trợ
+    const commands = {
+        'help': `Danh sách lệnh khả dụng:
+  - story      : Đọc thông điệp tuổi 20
+  - credits    : Xem danh sách ekip hậu trường
+  - sunday     : ??? (Easter Egg)
+  - wish <text>: Gửi một lời chúc mừng sinh nhật
+  - clear      : Dọn sạch màn hình console`,
+        
+        'story': `[LOG: CHAPTER 20]
+"Để lại quá khứ phía sau, sống vui vẻ ở hiện tại và thức giấc vào ngày mai."
+Chúc tất cả mọi người hôm nay thức giấc đều có một ngày thật dễ chịu! ✨`,
+
+        'credits': `Behind the scenes:
+• MUA     : Do Ngoc Thanh Thao (k biết nói gì... chị nói thay lòng e đi =))))
+• Costume : Đoàn Thị Thanh Út (cảm ơn chị đã sp dù e hơi báo hehe)
+• Studio  : Enchanted - Studio and Concepts
+• PTG     : Đinh Ngọc Cẩm Duyên (Thank you so much!)
+• STAFF   : Saee Sae & Mocha (đi chơi nhưng không cho tôi cười? lần sau búc tiếp nhá!)`,
+
+        'sunday': `(Bonus: Cứ cảm giác giai đoạn này khớp với Sunday kiểu kiểu như nào ấy nhỉ, trùng hợp thật haha)`
+    };
+
+    function appendLine(text, className = '') {
+        const line = document.createElement('div');
+        line.className = `output-line ${className}`;
+        line.textContent = text;
+        logsContainer.appendChild(line);
+        consoleBody.scrollTop = consoleBody.scrollHeight;
+    }
+
+    // Hiệu ứng chạy log tự động ban đầu
+    let currentStep = 0;
+    function printBootLogs() {
+        if (currentStep < bootLogs.length) {
+            const item = bootLogs[currentStep];
+            appendLine(item.text, item.class);
+            currentStep++;
+            setTimeout(printBootLogs, item.delay);
+        } else {
+            inputContainer.style.display = 'flex';
+            cmdInput.focus();
+        }
+    }
+
+    // Xử lý lệnh người dùng gõ
+    cmdInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            const rawVal = this.value.trim();
+            this.value = '';
+
+            if (!rawVal) return;
+
+            // In lại dòng lệnh người dùng vừa nhập
+            appendLine(`guest@chapter20:~$ ${rawVal}`);
+
+            const parts = rawVal.split(' ');
+            const cmd = parts[0].toLowerCase();
+            const args = parts.slice(1).join(' ');
+
+            if (cmd === 'clear') {
+                logsContainer.innerHTML = '';
+            } else if (cmd === 'wish') {
+                if (!args) {
+                    appendLine('Cú pháp chưa đúng. Hãy gõ: wish <nội dung lời chúc của bạn>', 'warning');
+                } else {
+                    appendLine(`[THANKS]: Lời chúc "${args}" đã được ghi nhận vào bộ nhớ hệ thống! Cảm ơn bạn rất nhiều! 🎉`, 'success');
+                }
+            } else if (commands[cmd]) {
+                appendLine(commands[cmd], 'dim');
+            } else {
+                appendLine(`command not found: ${cmd}. Gõ "help" để xem hướng dẫn.`, 'warning');
+            }
+
+            consoleBody.scrollTop = consoleBody.scrollHeight;
+        }
+    });
+
+    // Giữ focus vào ô input khi click bất kỳ đâu trên terminal
+    document.addEventListener('click', () => {
+        if (inputContainer.style.display !== 'none') {
+            cmdInput.focus();
+        }
+    });
+
+    // Bắt đầu chạy
+    window.onload = printBootLogs;
+</script>
+</body>
+</html>
