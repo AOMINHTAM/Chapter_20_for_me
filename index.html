@@ -81,6 +81,7 @@
             color: #3fb950;
             margin-right: 8px;
             user-select: none;
+            white-space: nowrap;
         }
         #cmd-input {
             flex: 1;
@@ -92,7 +93,6 @@
             font-size: 14px;
         }
 
-        /* CSS cho gallery lưới 3 ảnh */
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -132,7 +132,7 @@
     <div class="terminal-body" id="console">
         <div id="logs"></div>
         <div class="input-row" id="inputContainer" style="display: none;">
-            <span class="prompt-symbol">guest@chapter20:~$</span>
+            <span class="prompt-symbol" id="prompt">guest@chapter20:~$</span>
             <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus>
         </div>
     </div>
@@ -142,9 +142,16 @@
     const logsContainer = document.getElementById('logs');
     const inputContainer = document.getElementById('inputContainer');
     const cmdInput = document.getElementById('cmd-input');
+    const promptSymbol = document.getElementById('prompt');
     const consoleBody = document.getElementById('console');
 
-    // Kịch bản khởi động ban đầu
+    // Biến trạng thái để bắt người dùng nhập Tên -> Lời chúc
+    let wishState = {
+        step: 0, // 0: gõ lệnh bình thường, 1: đang nhập tên, 2: đang nhập lời chúc
+        sender: '',
+        message: ''
+    };
+
     const bootLogs = [
         { text: '> Initializing kernel modules...', class: 'dim', delay: 350 },
         { text: '> Checking system dependencies: [Freedom, Resilience, Balance]... OK', class: 'system', delay: 450 },
@@ -156,14 +163,13 @@
         { text: 'Gõ "help" để xem danh sách các lệnh có thể tương tác.', class: 'warning', delay: 300 }
     ];
 
-    // Danh sách các lệnh hỗ trợ
     const commands = {
         'help': `Danh sách lệnh khả dụng:
   - story      : Đọc thông điệp tuổi 20
   - photo      : Xem bộ ảnh Chapter 20 (Sunday)
   - credits    : Xem danh sách ekip hậu trường
   - sunday     : ??? (Easter Egg)
-  - wish <text>: Gửi một lời chúc mừng sinh nhật
+  - wish       : Gửi lời chúc mừng sinh nhật
   - clear      : Dọn sạch màn hình console`,
         
         'story': `[LOG: CHAPTER 20]
@@ -188,7 +194,6 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
         consoleBody.scrollTop = consoleBody.scrollHeight;
     }
 
-    // Hiệu ứng chạy log tự động ban đầu
     let currentStep = 0;
     function printBootLogs() {
         if (currentStep < bootLogs.length) {
@@ -202,42 +207,64 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
         }
     }
 
-    // Xử lý lệnh người dùng gõ
     cmdInput.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
-            const rawVal = this.value.trim();
+            const val = this.value.trim();
             this.value = '';
 
-            if (!rawVal) return;
+            if (!val && wishState.step === 0) return;
 
-            // In lại dòng lệnh người dùng vừa nhập
-            appendLine(`guest@chapter20:~$ ${rawVal}`);
+            // Xử lý khi đang trong quá trình gửi WISH
+            if (wishState.step === 1) {
+                // Đang nhập tên
+                wishState.sender = val || 'Ẩn danh';
+                appendLine(`> Tên của bạn: ${wishState.sender}`, 'highlight');
+                appendLine('[SYSTEM]: Nhập nội dung lời chúc bạn muốn gửi:', 'dim');
+                promptSymbol.textContent = 'wish@message:~$';
+                wishState.step = 2;
+                consoleBody.scrollTop = consoleBody.scrollHeight;
+                return;
+            } else if (wishState.step === 2) {
+                // Đang nhập lời chúc
+                wishState.message = val;
+                appendLine(`> Lời chúc: ${wishState.message}`, 'highlight');
+                appendLine('[SYSTEM]: Đang gửi dữ liệu về máy chủ...', 'dim');
 
-            const parts = rawVal.split(' ');
+                const formData = new FormData();
+                formData.append('sender', wishState.sender);
+                formData.append('message', wishState.message);
+
+                fetch('https://script.google.com/macros/s/AKfycbzu4i_WfJbOvcgYKjgb6Oj3rGsMDK7xwPlCdogcvnVJJvDRuKf21LDMdh1CsZa_wQtkIA/exec', {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: formData
+                }).then(() => {
+                    appendLine(`[THANKS]: Cảm ơn ${wishState.sender}! Lời chúc của bạn đã được lưu vào hệ thống! 🎉`, 'success');
+                }).catch(() => {
+                    appendLine('[ERROR]: Có lỗi mạng nhưng tâm ý đã được ghi nhận!', 'warning');
+                });
+
+                // Reset trạng thái về bình thường
+                wishState.step = 0;
+                wishState.sender = '';
+                wishState.message = '';
+                promptSymbol.textContent = 'guest@chapter20:~$';
+                consoleBody.scrollTop = consoleBody.scrollHeight;
+                return;
+            }
+
+            // In lại dòng lệnh người dùng vừa gõ bình thường
+            appendLine(`guest@chapter20:~$ ${val}`);
+
+            const parts = val.split(' ');
             const cmd = parts[0].toLowerCase();
-            const args = parts.slice(1).join(' ');
 
             if (cmd === 'clear') {
                 logsContainer.innerHTML = '';
             } else if (cmd === 'wish') {
-                if (!args) {
-                    appendLine('Cú pháp chưa đúng. Hãy gõ: wish <nội dung lời chúc của bạn>', 'warning');
-                } else {
-                    appendLine('[SYSTEM]: Đang kết nối đến máy chủ để gửi lời chúc...', 'dim');
-                    
-                    const formData = new FormData();
-                    formData.append('message', args);
-
-                    fetch('https://script.google.com/macros/s/AKfycbzu4i_WfJbOvcgYKjgb6Oj3rGsMDK7xwPlCdogcvnVJJvDRuKf21LDMdh1CsZa_wQtkIA/exec', {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        body: formData
-                    }).then(() => {
-                        appendLine(`[THANKS]: Lời chúc "${args}" đã được ghi nhận vào bộ nhớ hệ thống! Cảm ơn bạn rất nhiều! 🎉`, 'success');
-                    }).catch(() => {
-                        appendLine('[ERROR]: Có lỗi mạng, nhưng hệ thống dự phòng đã ghi nhận tâm ý của bạn!', 'warning');
-                    });
-                }
+                wishState.step = 1;
+                appendLine('[SYSTEM]: Bạn muốn xưng danh là ai? (Nhập tên / biệt danh rồi Enter):', 'dim');
+                promptSymbol.textContent = 'wish@name:~$';
             } else if (cmd === 'photo') {
                 appendLine('[SYSTEM]: Loading Chapter 20 gallery (3 photos)...', 'system');
                 
@@ -269,14 +296,12 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
         }
     });
 
-    // Giữ focus vào ô input khi click bất kỳ đâu trên terminal
     document.addEventListener('click', () => {
         if (inputContainer.style.display !== 'none') {
             cmdInput.focus();
         }
     });
 
-    // Bắt đầu chạy
     window.onload = printBootLogs;
 </script>
 </body>
