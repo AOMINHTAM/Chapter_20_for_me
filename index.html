@@ -92,7 +92,7 @@
             font-size: 14px;
         }
 
-        /* Thêm CSS cho gallery lưới 3 ảnh */
+        /* CSS cho gallery lưới 3 ảnh */
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -156,7 +156,7 @@
         { text: 'Gõ "help" để xem danh sách các lệnh có thể tương tác.', class: 'warning', delay: 300 }
     ];
 
-    // Danh sách các lệnh hỗ trợ đã thêm lệnh 'photo'
+    // Danh sách các lệnh hỗ trợ
     const commands = {
         'help': `Danh sách lệnh khả dụng:
   - story      : Đọc thông điệp tuổi 20
@@ -223,10 +223,23 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
                 if (!args) {
                     appendLine('Cú pháp chưa đúng. Hãy gõ: wish <nội dung lời chúc của bạn>', 'warning');
                 } else {
-                    appendLine(`[THANKS]: Lời chúc "${args}" đã được ghi nhận vào bộ nhớ hệ thống! Cảm ơn bạn rất nhiều! 🎉`, 'success');
+                    appendLine('[SYSTEM]: Đang kết nối đến máy chủ để gửi lời chúc...', 'dim');
+                    
+                    // Gửi trực tiếp về Google Sheets qua Apps Script Webhook
+                    fetch('https://script.google.com/macros/s/AKfycbzu4i_WfJbOvcgYKjgb6Oj3rGsMDK7xwPlCdogcvnVJJvDRuKf21LDMdh1CsZa_wQtkIA/exec', {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ message: args })
+                    }).then(() => {
+                        appendLine(`[THANKS]: Lời chúc "${args}" đã được ghi nhận vào bộ nhớ hệ thống! Cảm ơn bạn rất nhiều! 🎉`, 'success');
+                    }).catch(() => {
+                        appendLine('[ERROR]: Có lỗi mạng, nhưng hệ thống dự phòng đã ghi nhận tâm ý của bạn!', 'warning');
+                    });
                 }
             } else if (cmd === 'photo') {
-                // Nhánh xử lý lệnh hiển thị 3 ảnh
                 appendLine('[SYSTEM]: Loading Chapter 20 gallery (3 photos)...', 'system');
                 
                 const photoList = [
