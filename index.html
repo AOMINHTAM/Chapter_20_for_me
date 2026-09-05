@@ -225,14 +225,13 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
                 } else {
                     appendLine('[SYSTEM]: Đang kết nối đến máy chủ để gửi lời chúc...', 'dim');
                     
-                    // Gửi trực tiếp về Google Sheets qua Apps Script Webhook
+                    const formData = new FormData();
+                    formData.append('message', args);
+
                     fetch('https://script.google.com/macros/s/AKfycbzu4i_WfJbOvcgYKjgb6Oj3rGsMDK7xwPlCdogcvnVJJvDRuKf21LDMdh1CsZa_wQtkIA/exec', {
                         method: 'POST',
                         mode: 'no-cors',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ message: args })
+                        body: formData
                     }).then(() => {
                         appendLine(`[THANKS]: Lời chúc "${args}" đã được ghi nhận vào bộ nhớ hệ thống! Cảm ơn bạn rất nhiều! 🎉`, 'success');
                     }).catch(() => {
