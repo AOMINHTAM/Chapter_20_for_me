@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chapter 20 - System Console</title>
-    <!-- Dùng icon chim bồ câu Sunday 🕊️ -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 120%22><text x=%2250%%22 y=%2255%%22 dominant-baseline=%22central%22 text-anchor=%22middle%22 font-size=%2250%22>🕊️</text></svg>">        * {
+    <!-- Favicon bồ câu Sunday chuẩn form thon gọn -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 120%22><text x=%2250%%22 y=%2255%%22 dominant-baseline=%22central%22 text-anchor=%22middle%22 font-size=%2250%22>🕊️</text></svg>">
+    <style>
+        * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
@@ -145,9 +147,8 @@
     const promptSymbol = document.getElementById('prompt');
     const consoleBody = document.getElementById('console');
 
-    // Biến trạng thái để bắt người dùng nhập Tên -> Lời chúc
     let wishState = {
-        step: 0, // 0: gõ lệnh bình thường, 1: đang nhập tên, 2: đang nhập lời chúc
+        step: 0,
         sender: '',
         message: ''
     };
@@ -168,7 +169,6 @@
   - story      : Đọc thông điệp tuổi 20
   - photo      : Xem bộ ảnh Chapter 20 (Sunday)
   - credits    : Xem danh sách ekip hậu trường
-  - sunday     : ??? (Easter Egg)
   - wish       : Gửi lời chúc mừng sinh nhật
   - clear      : Dọn sạch màn hình console`,
         
@@ -183,7 +183,8 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
 • PTG     : Đinh Ngọc Cẩm Duyên (Thank you so much!)
 • STAFF   : Saee Sae & Mocha (đi chơi nhưng không cho tôi cười? lần sau búc tiếp nhá!)`,
 
-        'sunday': `(Bonus: Cứ cảm giác giai đoạn này khớp với Sunday kiểu kiểu như nào ấy nhỉ, trùng hợp thật haha)`
+        'sunday': `[EASTER EGG UNLOCKED 🕊️]:
+(Bonus: Cứ cảm giác giai đoạn này khớp với Sunday kiểu kiểu như nào ấy nhỉ, trùng hợp thật haha)`
     };
 
     function appendLine(text, className = '') {
@@ -214,9 +215,7 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
 
             if (!val && wishState.step === 0) return;
 
-            // Xử lý khi đang trong quá trình gửi WISH
             if (wishState.step === 1) {
-                // Đang nhập tên
                 wishState.sender = val || 'Ẩn danh';
                 appendLine(`> Tên của bạn: ${wishState.sender}`, 'highlight');
                 appendLine('[SYSTEM]: Nhập nội dung lời chúc bạn muốn gửi:', 'dim');
@@ -225,7 +224,6 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
                 consoleBody.scrollTop = consoleBody.scrollHeight;
                 return;
             } else if (wishState.step === 2) {
-                // Đang nhập lời chúc
                 wishState.message = val;
                 appendLine(`> Lời chúc: ${wishState.message}`, 'highlight');
                 appendLine('[SYSTEM]: Đang gửi dữ liệu về máy chủ...', 'dim');
@@ -244,7 +242,6 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
                     appendLine('[ERROR]: Có lỗi mạng nhưng tâm ý đã được ghi nhận!', 'warning');
                 });
 
-                // Reset trạng thái về bình thường
                 wishState.step = 0;
                 wishState.sender = '';
                 wishState.message = '';
@@ -253,7 +250,6 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
                 return;
             }
 
-            // In lại dòng lệnh người dùng vừa gõ bình thường
             appendLine(`guest@chapter20:~$ ${val}`);
 
             const parts = val.split(' ');
