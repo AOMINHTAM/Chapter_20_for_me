@@ -328,7 +328,7 @@
         'music', 'matrix', 'quiz', 'wish', 'clear', 'mute', 'sound', 'theme', 'sunday'
     ];
 
-    // Mini-game giải đố: Trial of The Order
+    // Mini-game giải đố: Lore chuẩn Penacony & Chapter 20
     let quizState = {
         active: false,
         currentQuestion: 0,
@@ -337,15 +337,15 @@
 
     const quizQuestions = [
         {
-            question: '[CÂU 1/3]: Trong câu chuyện về chú chim non của Sunday, nó đã vô tình rơi xuống đâu?\n  [A] Bụi gai sắc nhọn\n  [B] Vực thẳm không đáy\n  [C] Mặt đất lạnh lẽo',
-            answers: ['a', 'bui gai', 'bụi gai', 'a. bui gai']
+            question: '[CÂU 1/3]: Loài chim non gắn liền với câu chuyện triết lý bảo hộ của Sunday là gì?\n  [A] Quạ Đêm (Night Raven)\n  [B] Chim Hòa Điệu (Charmony Dove)\n  [C] Chim Origami (Origami Bird)',
+            answers: ['b', 'chim hoa dieu', 'charmony dove', 'b. chim hoa dieu']
         },
         {
-            question: '[CÂU 2/3]: Vùng đất của những giấc mơ tại Penacony được gọi là gì?\n  [A] Neverland\n  [B] Dreamscape\n  [C] The Reverie',
-            answers: ['b', 'dreamscape']
+            question: '[CÂU 2/3]: Sunday từng giữ chức vụ Tộc Trưởng của Gia Tộc nào trong 5 Đại Gia Tộc Penacony?\n  [A] Gia Tộc Gỗ Sồi (Oak Family)\n  [B] Gia Tộc Thợ Săn (Bloodhound Family)\n  [C] Gia Tộc Đom Đóm (Iris Family)',
+            answers: ['a', 'go soi', 'oak family', 'a. gia toc go soi']
         },
         {
-            question: '[CÂU 3/3]: Hệ điều hành tâm hồn của Ao Minh Tâm vừa chính thức nâng cấp lên phiên bản v?\n  (Gợi ý: Nhập số tuổi hiện tại)',
+            question: '[CÂU 3/3]: Hệ thống tâm hồn của Ao Minh Tâm vừa chính thức nâng cấp lên phiên bản v?\n  (Gợi ý: Nhập số tuổi hiện tại)',
             answers: ['20', 'v20', 'v20.0']
         }
     ];
@@ -355,7 +355,7 @@
         quizState.currentQuestion = 0;
         quizState.score = 0;
         appendLine('=== [TRIAL OF THE ORDER // THỬ THÁCH TRẬT TỰ] ===', 'highlight');
-        appendLine('Hãy vượt qua 3 câu hỏi để được công nhận bởi The Order (Ctrl+C để bỏ cuộc).', 'dim');
+        appendLine('Vượt qua 3 câu hỏi để mở khóa ấn ký của The Order (Bấm Ctrl+C để hủy).', 'dim');
         askNextQuestion();
     }
 
@@ -404,7 +404,7 @@
         }, 4000);
     }
 
-    // Quotes chuẩn thoại Sunday
+    // Quotes chuẩn lore Sunday
     const quotes = [
         `"Tại sao chim lại bay? Có lẽ là vì đôi cánh của chúng không cam lòng bị vây hãm trên mặt đất..." — Sunday`,
         `"Nếu số phận định sẵn nó sẽ rơi xuống vực thẳm... liệu nó có còn khao khát bầu trời?" — Sunday`,
@@ -482,7 +482,7 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
     }
 
     cmdInput.addEventListener('keydown', function (e) {
-        // Phím tắt Ctrl + C: Hủy lệnh/tiến trình dở dang
+        // Phím tắt Ctrl + C
         if (e.ctrlKey && e.key.toLowerCase() === 'c') {
             e.preventDefault();
             const currentPrompt = promptSymbol.textContent;
@@ -490,7 +490,6 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
             this.value = '';
             appendLine(`${currentPrompt} ${currentVal}^C`, 'warning');
             
-            // Reset các trạng thái
             wishState.step = 0;
             wishState.sender = '';
             wishState.message = '';
@@ -502,7 +501,7 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
             return;
         }
 
-        // Tab Autocomplete (chỉ khi ở chế độ lệnh gốc)
+        // Tab Autocomplete
         if (wishState.step === 0 && !quizState.active && e.key === 'Tab') {
             e.preventDefault();
             const current = this.value.trim().toLowerCase();
@@ -517,7 +516,7 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
             return;
         }
 
-        // Điều hướng lịch sử lệnh (Arrow Up / Down)
+        // Điều hướng lịch sử (Arrow Up / Down)
         if (wishState.step === 0 && !quizState.active) {
             if (e.key === 'ArrowUp') {
                 e.preventDefault();
@@ -547,7 +546,7 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
 
             if (!val && wishState.step === 0 && !quizState.active) return;
 
-            // Xử lý tiến trình Mini-game Quiz
+            // Xử lý quiz mini-game
             if (quizState.active) {
                 appendLine(`${promptSymbol.textContent} ${val}`);
                 const currentQ = quizQuestions[quizState.currentQuestion];
@@ -585,7 +584,7 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
                 return;
             }
 
-            // Xử lý gửi lời chúc (wish)
+            // Xử lý wish
             if (wishState.step === 1) {
                 wishState.sender = val || 'Ẩn danh';
                 appendLine(`> Tên của bạn: ${wishState.sender}`, 'highlight');
@@ -627,7 +626,7 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
                 return;
             }
 
-            // Lưu lịch sử lệnh
+            // Lưu lịch sử
             if (val && commandHistory[commandHistory.length - 1] !== val) {
                 commandHistory.push(val);
             }
