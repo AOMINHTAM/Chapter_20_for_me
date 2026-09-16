@@ -173,7 +173,7 @@
     </div>
 </div>
 
-<!-- Thư viện Canvas Confetti -->
+<!-- Canvas Confetti Library -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <script>
@@ -185,7 +185,11 @@
     const matrixCanvas = document.getElementById('matrixCanvas');
     const matrixCtx = matrixCanvas.getContext('2d');
 
-    // Web Audio API: Tiếng gõ phím cơ & chuông
+    // Lịch sử lệnh (Arrow Up / Down)
+    let commandHistory = [];
+    let historyIndex = -1;
+
+    // Web Audio API
     let audioCtx = null;
     function initAudio() {
         if (!audioCtx) {
@@ -212,7 +216,7 @@
 
     function playSuccessChime() {
         initAudio();
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        const notes = [523.25, 659.25, 783.99, 1046.50];
         notes.forEach((freq, idx) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -267,6 +271,15 @@
         }, 4000);
     }
 
+    // Danh sách quote ngẫu nhiên
+    const quotes = [
+        `"Tại sao con người lại chìm vào giấc mộng? Vì họ sợ thức giấc đối mặt với thực tại." — Sunday`,
+        `"Để lại quá khứ phía sau, sống vui vẻ ở hiện tại và thức giấc vào ngày mai."`,
+        `"Nếu tự do là một gánh nặng, hãy để trật tự dẫn lối bạn đến bình yên."`,
+        `"Quá khứ đã là commit cũ, đừng checkout lại làm gì. Hãy merge thẳng vào tương lai."`,
+        `"Đừng sợ những lỗi cú pháp trong cuộc đời, mỗi bug đều mang lại một bài học quý giá."`
+    ];
+
     let wishState = {
         step: 0,
         sender: '',
@@ -289,6 +302,8 @@
   - story      : Đọc thông điệp tuổi 20
   - photo      : Xem bộ ảnh Chapter 20 (Sunday)
   - credits    : Xem danh sách ekip hậu trường
+  - quote      : Rút một câu trích dẫn ngẫu nhiên
+  - music      : Mở giai điệu Penacony trong trẻo
   - matrix     : Kích hoạt luồng dữ liệu trật tự
   - wish       : Gửi lời chúc mừng sinh nhật
   - clear      : Dọn sạch màn hình console`,
@@ -330,12 +345,35 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
     }
 
     cmdInput.addEventListener('keydown', function (e) {
+        // Điều hướng lịch sử lệnh (Arrow Up / Down)
+        if (wishState.step === 0) {
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (commandHistory.length > 0 && historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    this.value = commandHistory[commandHistory.length - 1 - historyIndex];
+                }
+                return;
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    this.value = commandHistory[commandHistory.length - 1 - historyIndex];
+                } else if (historyIndex === 0) {
+                    historyIndex = -1;
+                    this.value = '';
+                }
+                return;
+            }
+        }
+
         if (e.key === 'Enter') {
             const val = this.value.trim();
             this.value = '';
 
             if (!val && wishState.step === 0) return;
 
+            // Xử lý gửi lời chúc
             if (wishState.step === 1) {
                 wishState.sender = val || 'Ẩn danh';
                 appendLine(`> Tên của bạn: ${wishState.sender}`, 'highlight');
@@ -377,6 +415,10 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
                 return;
             }
 
+            // Lưu lịch sử lệnh
+            commandHistory.push(val);
+            historyIndex = -1;
+
             appendLine(`guest@chapter20:~$ ${val}`);
 
             const parts = val.split(' ');
@@ -384,6 +426,13 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
 
             if (cmd === 'clear') {
                 logsContainer.innerHTML = '';
+            } else if (cmd === 'quote') {
+                const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                appendLine(`[QUOTE]: ${randomQuote}`, 'highlight');
+            } else if (cmd === 'music') {
+                appendLine('[AUDIO]: Đang mở giai điệu Penacony trên tab mới...', 'system');
+                appendLine('> "If I Can Stop One Heart From Breaking" 🕊️', 'dim');
+                window.open('https://www.youtube.com/watch?v=kYJv133j-c0', '_blank');
             } else if (cmd === 'matrix') {
                 appendLine('[SYSTEM]: Executing Penacony Order stream...', 'success');
                 runMatrix();
