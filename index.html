@@ -23,14 +23,57 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 120%22><text x=%2250%%22 y=%2255%%22 dominant-baseline=%22central%22 text-anchor=%22middle%22 font-size=%2250%22>🕊️</text></svg>">
 
     <style>
+        :root {
+            --bg-body: #0c1017;
+            --bg-window: #161b22;
+            --bg-header: #21262d;
+            --border-color: #30363d;
+            --text-main: #d1d5db;
+            --text-dim: #8b949e;
+            --text-system: #58a6ff;
+            --text-success: #3fb950;
+            --text-highlight: #d2a8ff;
+            --text-warning: #f0883e;
+            --text-input: #f0f6fc;
+        }
+
+        /* Themes */
+        body.theme-matrix {
+            --bg-body: #020b05;
+            --bg-window: #041207;
+            --bg-header: #08200e;
+            --border-color: #0d3817;
+            --text-main: #a3f7b5;
+            --text-dim: #2e7d32;
+            --text-system: #00ff66;
+            --text-success: #00e676;
+            --text-highlight: #69f0ae;
+            --text-warning: #b2ff59;
+            --text-input: #e8f5e9;
+        }
+
+        body.theme-amber {
+            --bg-body: #120a02;
+            --bg-window: #1c1105;
+            --bg-header: #2a1a08;
+            --border-color: #4a2e0e;
+            --text-main: #ffd180;
+            --text-dim: #a67232;
+            --text-system: #ffab40;
+            --text-success: #ffb74d;
+            --text-highlight: #ffe57f;
+            --text-warning: #ff6d00;
+            --text-input: #fff3e0;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
         body {
-            background-color: #0c1017;
-            color: #d1d5db;
+            background-color: var(--bg-body);
+            color: var(--text-main);
             font-family: 'Consolas', 'Courier New', monospace;
             padding: 20px;
             display: flex;
@@ -38,24 +81,32 @@
             align-items: center;
             min-height: 100vh;
             overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         .terminal-window {
             width: 100%;
             max-width: 800px;
-            background: #161b22;
+            background: var(--bg-window);
             border-radius: 8px;
-            border: 1px solid #30363d;
+            border: 1px solid var(--border-color);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
             overflow: hidden;
             position: relative;
             z-index: 10;
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
         .terminal-header {
-            background: #21262d;
+            background: var(--bg-header);
             padding: 10px 15px;
             display: flex;
             align-items: center;
-            border-bottom: 1px solid #30363d;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
         }
         .buttons {
             display: flex;
@@ -72,7 +123,22 @@
         .terminal-title {
             margin-left: 15px;
             font-size: 13px;
-            color: #8b949e;
+            color: var(--text-dim);
+        }
+        .sound-toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .sound-toggle-btn:hover {
+            color: var(--text-input);
+            background: rgba(255, 255, 255, 0.08);
         }
         .terminal-body {
             padding: 16px;
@@ -87,11 +153,11 @@
             white-space: pre-wrap;
             word-break: break-word;
         }
-        .system { color: #58a6ff; }
-        .success { color: #3fb950; }
-        .highlight { color: #d2a8ff; }
-        .warning { color: #f0883e; }
-        .dim { color: #8b949e; }
+        .system { color: var(--text-system); }
+        .success { color: var(--text-success); }
+        .highlight { color: var(--text-highlight); }
+        .warning { color: var(--text-warning); }
+        .dim { color: var(--text-dim); }
         
         .input-row {
             display: flex;
@@ -99,7 +165,7 @@
             margin-top: 10px;
         }
         .prompt-symbol {
-            color: #3fb950;
+            color: var(--text-success);
             margin-right: 8px;
             user-select: none;
             white-space: nowrap;
@@ -109,7 +175,7 @@
             background: transparent;
             border: none;
             outline: none;
-            color: #f0f6fc;
+            color: var(--text-input);
             font-family: inherit;
             font-size: 14px;
         }
@@ -126,7 +192,7 @@
             height: 220px;
             object-fit: cover;
             border-radius: 6px;
-            border: 1px solid #30363d;
+            border: 1px solid var(--border-color);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
             transition: transform 0.2s ease;
         }
@@ -157,12 +223,15 @@
 
 <div class="terminal-window">
     <div class="terminal-header">
-        <div class="buttons">
-            <span class="btn btn-close"></span>
-            <span class="btn btn-min"></span>
-            <span class="btn btn-max"></span>
+        <div class="header-left">
+            <div class="buttons">
+                <span class="btn btn-close"></span>
+                <span class="btn btn-min"></span>
+                <span class="btn btn-max"></span>
+            </div>
+            <span class="terminal-title">guest@chapter20:~ (bash)</span>
         </div>
-        <span class="terminal-title">guest@chapter20:~ (bash)</span>
+        <button class="sound-toggle-btn" id="soundBtn" title="Bật/Tắt âm thanh">🔊 Sound: ON</button>
     </div>
     <div class="terminal-body" id="console">
         <div id="logs"></div>
@@ -184,13 +253,28 @@
     const consoleBody = document.getElementById('console');
     const matrixCanvas = document.getElementById('matrixCanvas');
     const matrixCtx = matrixCanvas.getContext('2d');
+    const soundBtn = document.getElementById('soundBtn');
 
-    // Lịch sử lệnh (Arrow Up / Down)
-    let commandHistory = [];
-    let historyIndex = -1;
-
-    // Web Audio API
+    // Quản lý âm thanh
+    let isMuted = false;
     let audioCtx = null;
+
+    function toggleSound(forceState = null) {
+        if (forceState !== null) {
+            isMuted = forceState;
+        } else {
+            isMuted = !isMuted;
+        }
+        soundBtn.textContent = isMuted ? '🔇 Sound: OFF' : '🔊 Sound: ON';
+        soundBtn.style.color = isMuted ? 'var(--text-warning)' : 'var(--text-dim)';
+    }
+
+    soundBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleSound();
+        cmdInput.focus();
+    });
+
     function initAudio() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -201,6 +285,7 @@
     }
 
     function playKeySound() {
+        if (isMuted) return;
         initAudio();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
@@ -215,6 +300,7 @@
     }
 
     function playSuccessChime() {
+        if (isMuted) return;
         initAudio();
         const notes = [523.25, 659.25, 783.99, 1046.50];
         notes.forEach((freq, idx) => {
@@ -232,6 +318,16 @@
     }
 
     cmdInput.addEventListener('input', playKeySound);
+
+    // Lịch sử lệnh (Arrow Up / Down)
+    let commandHistory = [];
+    let historyIndex = -1;
+
+    // Danh sách lệnh hỗ trợ Tab Autocomplete
+    const availableCommands = [
+        'help', 'story', 'photo', 'credits', 'quote', 
+        'music', 'matrix', 'wish', 'clear', 'mute', 'sound', 'theme', 'sunday'
+    ];
 
     // Matrix Rain Effect
     let matrixInterval = null;
@@ -271,11 +367,12 @@
         }, 4000);
     }
 
-    // Danh sách quote ngẫu nhiên
+    // Danh sách quotes chuẩn lore Sunday
     const quotes = [
-        `"Tại sao con người lại chìm vào giấc mộng? Vì họ sợ thức giấc đối mặt với thực tại." — Sunday`,
+        `"Tại sao chim lại bay? Có lẽ là vì đôi cánh của chúng không cam lòng bị vây hãm trên mặt đất..." — Sunday`,
+        `"Nếu số phận định sẵn nó sẽ rơi xuống vực thẳm... liệu nó có còn khao khát bầu trời?" — Sunday`,
+        `"Nếu thực tại chỉ mang lại khổ đau, thì việc chìm vào một giấc mộng vĩnh hằng có gì là sai trái?" — Sunday`,
         `"Để lại quá khứ phía sau, sống vui vẻ ở hiện tại và thức giấc vào ngày mai."`,
-        `"Nếu tự do là một gánh nặng, hãy để trật tự dẫn lối bạn đến bình yên."`,
         `"Quá khứ đã là commit cũ, đừng checkout lại làm gì. Hãy merge thẳng vào tương lai."`,
         `"Đừng sợ những lỗi cú pháp trong cuộc đời, mỗi bug đều mang lại một bài học quý giá."`
     ];
@@ -294,19 +391,21 @@
         { text: '--------------------------------------------------', class: 'dim', delay: 200 },
         { text: '"Hello World\\n"', class: 'highlight', delay: 400 },
         { text: 'Hệ thống đã nâng cấp thành công lên phiên bản 20.0.', class: 'dim', delay: 300 },
-        { text: 'Gõ "help" để xem danh sách các lệnh có thể tương tác.', class: 'warning', delay: 300 }
+        { text: 'Gõ "help" để xem danh sách lệnh (hỗ trợ phím Tab, Ctrl+C).', class: 'warning', delay: 300 }
     ];
 
     const commands = {
         'help': `Danh sách lệnh khả dụng:
-  - story      : Đọc thông điệp tuổi 20
-  - photo      : Xem bộ ảnh Chapter 20 (Sunday)
-  - credits    : Xem danh sách ekip hậu trường
-  - quote      : Rút một câu trích dẫn ngẫu nhiên
-  - music      : Mở giai điệu Penacony trong trẻo
-  - matrix     : Kích hoạt luồng dữ liệu trật tự
-  - wish       : Gửi lời chúc mừng sinh nhật
-  - clear      : Dọn sạch màn hình console`,
+  - story         : Đọc thông điệp tuổi 20
+  - photo         : Xem bộ ảnh Chapter 20 (Sunday)
+  - credits       : Xem danh sách ekip hậu trường
+  - quote         : Rút một câu trích dẫn ngẫu nhiên
+  - music         : Mở giai điệu Penacony trong trẻo
+  - matrix        : Kích hoạt luồng dữ liệu trật tự
+  - wish          : Gửi lời chúc mừng sinh nhật
+  - theme [tên]   : Đổi theme (sunday | matrix | amber)
+  - mute/sound    : Bật hoặc tắt âm thanh console
+  - clear         : Dọn sạch màn hình console`,
         
         'story': `[LOG: CHAPTER 20]
 "Để lại quá khứ phía sau, sống vui vẻ ở hiện tại và thức giấc vào ngày mai."
@@ -345,6 +444,39 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
     }
 
     cmdInput.addEventListener('keydown', function (e) {
+        // Phím tắt Ctrl + C: Hủy lệnh hiện tại & reset prompt
+        if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+            e.preventDefault();
+            const currentPrompt = promptSymbol.textContent;
+            const currentVal = this.value;
+            this.value = '';
+            appendLine(`${currentPrompt} ${currentVal}^C`, 'warning');
+            
+            // Hủy trạng thái wish nếu đang nhập dở
+            wishState.step = 0;
+            wishState.sender = '';
+            wishState.message = '';
+            promptSymbol.textContent = 'guest@chapter20:~$';
+            historyIndex = -1;
+            consoleBody.scrollTop = consoleBody.scrollHeight;
+            return;
+        }
+
+        // Tab Autocomplete (khi không ở trong luồng wish)
+        if (wishState.step === 0 && e.key === 'Tab') {
+            e.preventDefault();
+            const current = this.value.trim().toLowerCase();
+            if (!current) return;
+
+            const matches = availableCommands.filter(c => c.startsWith(current));
+            if (matches.length === 1) {
+                this.value = matches[0];
+            } else if (matches.length > 1) {
+                appendLine(`[SUGGESTIONS]: ${matches.join('  ')}`, 'dim');
+            }
+            return;
+        }
+
         // Điều hướng lịch sử lệnh (Arrow Up / Down)
         if (wishState.step === 0) {
             if (e.key === 'ArrowUp') {
@@ -352,6 +484,7 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
                 if (commandHistory.length > 0 && historyIndex < commandHistory.length - 1) {
                     historyIndex++;
                     this.value = commandHistory[commandHistory.length - 1 - historyIndex];
+                    setTimeout(() => this.selectionStart = this.selectionEnd = this.value.length, 0);
                 }
                 return;
             } else if (e.key === 'ArrowDown') {
@@ -359,6 +492,7 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
                 if (historyIndex > 0) {
                     historyIndex--;
                     this.value = commandHistory[commandHistory.length - 1 - historyIndex];
+                    setTimeout(() => this.selectionStart = this.selectionEnd = this.value.length, 0);
                 } else if (historyIndex === 0) {
                     historyIndex = -1;
                     this.value = '';
@@ -373,11 +507,11 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
 
             if (!val && wishState.step === 0) return;
 
-            // Xử lý gửi lời chúc
+            // Xử lý gửi lời chúc (wish)
             if (wishState.step === 1) {
                 wishState.sender = val || 'Ẩn danh';
                 appendLine(`> Tên của bạn: ${wishState.sender}`, 'highlight');
-                appendLine('[SYSTEM]: Nhập nội dung lời chúc bạn muốn gửi:', 'dim');
+                appendLine('[SYSTEM]: Nhập nội dung lời chúc bạn muốn gửi (Ctrl+C để hủy):', 'dim');
                 promptSymbol.textContent = 'wish@message:~$';
                 wishState.step = 2;
                 consoleBody.scrollTop = consoleBody.scrollHeight;
@@ -416,23 +550,47 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
             }
 
             // Lưu lịch sử lệnh
-            commandHistory.push(val);
+            if (val && commandHistory[commandHistory.length - 1] !== val) {
+                commandHistory.push(val);
+            }
             historyIndex = -1;
 
             appendLine(`guest@chapter20:~$ ${val}`);
 
             const parts = val.split(' ');
             const cmd = parts[0].toLowerCase();
+            const arg = parts[1] ? parts[1].toLowerCase() : null;
 
             if (cmd === 'clear') {
                 logsContainer.innerHTML = '';
+            } else if (cmd === 'theme') {
+                if (arg === 'matrix') {
+                    document.body.className = 'theme-matrix';
+                    appendLine('[THEME]: Đã kích hoạt theme "Matrix" (Classic Hacker) 🟩', 'success');
+                } else if (arg === 'amber') {
+                    document.body.className = 'theme-amber';
+                    appendLine('[THEME]: Đã kích hoạt theme "Amber" (Retro 1980s) 🟧', 'highlight');
+                } else if (arg === 'sunday' || arg === 'default') {
+                    document.body.className = '';
+                    appendLine('[THEME]: Đã kích hoạt theme "Sunday" (The Order / Default) 🕊️', 'system');
+                } else {
+                    appendLine(`[THEME]: Theme không hợp lệ. Các theme khả dụng: sunday, matrix, amber`, 'warning');
+                    appendLine(`> Cú pháp: theme [tên] (ví dụ: theme matrix)`, 'dim');
+                }
+            } else if (cmd === 'mute') {
+                toggleSound(true);
+                appendLine('[AUDIO]: Âm thanh đã được TẮT 🔇', 'dim');
+            } else if (cmd === 'sound') {
+                toggleSound(false);
+                appendLine('[AUDIO]: Âm thanh đã được BẬT 🔊', 'success');
+                playSuccessChime();
             } else if (cmd === 'quote') {
                 const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
                 appendLine(`[QUOTE]: ${randomQuote}`, 'highlight');
             } else if (cmd === 'music') {
-                appendLine('[AUDIO]: Đang mở giai điệu Penacony trên tab mới...', 'system');
-                appendLine('> "If I Can Stop One Heart From Breaking" 🕊️', 'dim');
-                window.open('https://www.youtube.com/watch?v=kYJv133j-c0', '_blank');
+                appendLine('[AUDIO]: Đang phát giai điệu Penacony trên tab mới...', 'system');
+                appendLine('> "If I Can Stop One Heart From Breaking" — Robin (Chevy) 🕊️', 'dim');
+                window.open('https://www.youtube.com/watch?v=xFHNWJVsjmY', '_blank');
             } else if (cmd === 'matrix') {
                 appendLine('[SYSTEM]: Executing Penacony Order stream...', 'success');
                 runMatrix();
@@ -473,8 +631,8 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
         }
     });
 
-    document.addEventListener('click', () => {
-        if (inputContainer.style.display !== 'none') {
+    document.addEventListener('click', (e) => {
+        if (e.target !== soundBtn && inputContainer.style.display !== 'none') {
             cmdInput.focus();
         }
     });
