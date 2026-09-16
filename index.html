@@ -37,7 +37,6 @@
             --text-input: #f0f6fc;
         }
 
-        /* Themes */
         body.theme-matrix {
             --bg-body: #020b05;
             --bg-window: #041207;
@@ -326,8 +325,46 @@
     // Danh sách lệnh hỗ trợ Tab Autocomplete
     const availableCommands = [
         'help', 'story', 'photo', 'credits', 'quote', 
-        'music', 'matrix', 'wish', 'clear', 'mute', 'sound', 'theme', 'sunday'
+        'music', 'matrix', 'quiz', 'wish', 'clear', 'mute', 'sound', 'theme', 'sunday'
     ];
+
+    // Mini-game giải đố: Trial of The Order
+    let quizState = {
+        active: false,
+        currentQuestion: 0,
+        score: 0
+    };
+
+    const quizQuestions = [
+        {
+            question: '[CÂU 1/3]: Trong câu chuyện về chú chim non của Sunday, nó đã vô tình rơi xuống đâu?\n  [A] Bụi gai sắc nhọn\n  [B] Vực thẳm không đáy\n  [C] Mặt đất lạnh lẽo',
+            answers: ['a', 'bui gai', 'bụi gai', 'a. bui gai']
+        },
+        {
+            question: '[CÂU 2/3]: Vùng đất của những giấc mơ tại Penacony được gọi là gì?\n  [A] Neverland\n  [B] Dreamscape\n  [C] The Reverie',
+            answers: ['b', 'dreamscape']
+        },
+        {
+            question: '[CÂU 3/3]: Hệ điều hành tâm hồn của Ao Minh Tâm vừa chính thức nâng cấp lên phiên bản v?\n  (Gợi ý: Nhập số tuổi hiện tại)',
+            answers: ['20', 'v20', 'v20.0']
+        }
+    ];
+
+    function startQuiz() {
+        quizState.active = true;
+        quizState.currentQuestion = 0;
+        quizState.score = 0;
+        appendLine('=== [TRIAL OF THE ORDER // THỬ THÁCH TRẬT TỰ] ===', 'highlight');
+        appendLine('Hãy vượt qua 3 câu hỏi để được công nhận bởi The Order (Ctrl+C để bỏ cuộc).', 'dim');
+        askNextQuestion();
+    }
+
+    function askNextQuestion() {
+        const q = quizQuestions[quizState.currentQuestion];
+        appendLine('');
+        appendLine(q.question, 'system');
+        promptSymbol.textContent = `quiz[q${quizState.currentQuestion + 1}]:~$`;
+    }
 
     // Matrix Rain Effect
     let matrixInterval = null;
@@ -367,7 +404,7 @@
         }, 4000);
     }
 
-    // Danh sách quotes chuẩn lore Sunday
+    // Quotes chuẩn thoại Sunday
     const quotes = [
         `"Tại sao chim lại bay? Có lẽ là vì đôi cánh của chúng không cam lòng bị vây hãm trên mặt đất..." — Sunday`,
         `"Nếu số phận định sẵn nó sẽ rơi xuống vực thẳm... liệu nó có còn khao khát bầu trời?" — Sunday`,
@@ -402,6 +439,7 @@
   - quote         : Rút một câu trích dẫn ngẫu nhiên
   - music         : Mở giai điệu Penacony trong trẻo
   - matrix        : Kích hoạt luồng dữ liệu trật tự
+  - quiz          : Thử thách giải đố Penacony (Mini-game)
   - wish          : Gửi lời chúc mừng sinh nhật
   - theme [tên]   : Đổi theme (sunday | matrix | amber)
   - mute/sound    : Bật hoặc tắt âm thanh console
@@ -424,7 +462,7 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
 
     function appendLine(text, className = '') {
         const line = document.createElement('div');
-        line.className = `output-line ${className}`;
+        line.className = `output-line ${text === '' ? '' : className}`;
         line.textContent = text;
         logsContainer.appendChild(line);
         consoleBody.scrollTop = consoleBody.scrollHeight;
@@ -444,7 +482,7 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
     }
 
     cmdInput.addEventListener('keydown', function (e) {
-        // Phím tắt Ctrl + C: Hủy lệnh hiện tại & reset prompt
+        // Phím tắt Ctrl + C: Hủy lệnh/tiến trình dở dang
         if (e.ctrlKey && e.key.toLowerCase() === 'c') {
             e.preventDefault();
             const currentPrompt = promptSymbol.textContent;
@@ -452,18 +490,20 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
             this.value = '';
             appendLine(`${currentPrompt} ${currentVal}^C`, 'warning');
             
-            // Hủy trạng thái wish nếu đang nhập dở
+            // Reset các trạng thái
             wishState.step = 0;
             wishState.sender = '';
             wishState.message = '';
+            quizState.active = false;
+            
             promptSymbol.textContent = 'guest@chapter20:~$';
             historyIndex = -1;
             consoleBody.scrollTop = consoleBody.scrollHeight;
             return;
         }
 
-        // Tab Autocomplete (khi không ở trong luồng wish)
-        if (wishState.step === 0 && e.key === 'Tab') {
+        // Tab Autocomplete (chỉ khi ở chế độ lệnh gốc)
+        if (wishState.step === 0 && !quizState.active && e.key === 'Tab') {
             e.preventDefault();
             const current = this.value.trim().toLowerCase();
             if (!current) return;
@@ -478,7 +518,7 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
         }
 
         // Điều hướng lịch sử lệnh (Arrow Up / Down)
-        if (wishState.step === 0) {
+        if (wishState.step === 0 && !quizState.active) {
             if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 if (commandHistory.length > 0 && historyIndex < commandHistory.length - 1) {
@@ -505,7 +545,45 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
             const val = this.value.trim();
             this.value = '';
 
-            if (!val && wishState.step === 0) return;
+            if (!val && wishState.step === 0 && !quizState.active) return;
+
+            // Xử lý tiến trình Mini-game Quiz
+            if (quizState.active) {
+                appendLine(`${promptSymbol.textContent} ${val}`);
+                const currentQ = quizQuestions[quizState.currentQuestion];
+                const cleanInput = val.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const isCorrect = currentQ.answers.some(ans => cleanInput === ans.replace(/[^a-z0-9]/g, ''));
+
+                if (isCorrect) {
+                    appendLine('✔ Chính xác! The Order ghi nhận sự thấu hiểu của bạn.', 'success');
+                    quizState.score++;
+                } else {
+                    appendLine('✘ Tiếc quá, câu trả lời chưa chuẩn xác!', 'warning');
+                }
+
+                quizState.currentQuestion++;
+                if (quizState.currentQuestion < quizQuestions.length) {
+                    askNextQuestion();
+                } else {
+                    appendLine('');
+                    if (quizState.score === quizQuestions.length) {
+                        appendLine('★ [CHÚC MỪNG]: Bạn đã xuất sắc vượt qua toàn bộ Thử Thách Trật Tự! (3/3)', 'highlight');
+                        appendLine('> Danh hiệu mở khóa: [ORDER CONSECRATOR 🕊️]', 'success');
+                        playSuccessChime();
+                        confetti({
+                            particleCount: 80,
+                            spread: 70,
+                            origin: { y: 0.6 }
+                        });
+                    } else {
+                        appendLine(`[KẾT QUẢ]: Bạn đúng ${quizState.score}/${quizQuestions.length} câu. Gõ "quiz" để thử lại bất cứ lúc nào!`, 'dim');
+                    }
+                    quizState.active = false;
+                    promptSymbol.textContent = 'guest@chapter20:~$';
+                }
+                consoleBody.scrollTop = consoleBody.scrollHeight;
+                return;
+            }
 
             // Xử lý gửi lời chúc (wish)
             if (wishState.step === 1) {
@@ -563,6 +641,8 @@ Chúc tất cả mọi người hôm nay thức giấc đều có một ngày th
 
             if (cmd === 'clear') {
                 logsContainer.innerHTML = '';
+            } else if (cmd === 'quiz') {
+                startQuiz();
             } else if (cmd === 'theme') {
                 if (arg === 'matrix') {
                     document.body.className = 'theme-matrix';
